@@ -1,10 +1,13 @@
-# Biology Recognition System
+# App Mobile Testing Branch
 
-This is a mobile application designed to help high school students in Vietnam recognize and learn about biological specimens found in their textbooks. The app uses image recognition technology to identify various biology samples, making it easier for students to study and understand biology concepts.
+This branch is dedicated to integrating and testing all mobile app features developed with Flutter. All updates from different mobile development branches are merged here for team testing before being merged into the main branch.
 
-**Key Features:**
-- Identify biology specimens using your phone's camera
-- Access information about each specimen from the high school curriculum
-- User-friendly interface designed for students
+**Purpose:**
+- To provide a shared environment for all team members to test and review the latest mobile app features.
+- To ensure all app components work well together before merging into main.
 
-This project aims to support students in learning biology more effectively and interactively.
+**Usage:**
+- Merge all mobile app-related branches into this branch for integration and testing.
+- Use this branch to identify and fix bugs or issues before final deployment to main.
+
+Please use this branch for collaborative testing and integration of mobile app features.
