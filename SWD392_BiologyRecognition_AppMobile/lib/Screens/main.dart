@@ -5,6 +5,7 @@ import 'profileMenu.dart';
 import 'recognition.dart';
 import 'login.dart';
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 void main() {
   runApp(MyApp());
 }
@@ -16,31 +17,48 @@ class MyApp extends StatelessWidget {
       title: 'Bio Recognition App',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: LoginScreen(),
+      navigatorObservers: [routeObserver],
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
+  // Thêm initialIndex để chọn tab khởi đầu
+  final int initialIndex;
+
+  const MainScreen({Key? key, this.initialIndex = 0}) : super(key: key);
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex; // Dùng giá trị từ constructor
+  }
 
   void goToProfileTab() {
     setState(() {
-      _currentIndex = 3; // Index của Profile tab
+      _currentIndex = 3;
     });
   }
 
   void goToRecognitionTab() {
     setState(() {
-      _currentIndex = 2; // Index của Recognition tab
+      _currentIndex = 2;
     });
   }
 
-  // Thêm hàm này để xử lý khi bấm vào các tab
+  void goToBiologyResearchTab() {
+    setState(() {
+      _currentIndex = 1;
+    });
+  }
+
   void onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -49,10 +67,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Phần code không đổi
     final List<Widget> _screens = [
       HomeScreen(
         onUserIconTap: goToProfileTab,
         onRecognitionTap: goToRecognitionTab,
+        onBiologyResearchTap: goToBiologyResearchTab,
       ),
       BiologySearchTab(onUserIconTap: goToProfileTab),
       RecognitionScreen(),
@@ -62,24 +82,6 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        currentIndex: _currentIndex,
-        onTap: onTabTapped, // Đã có hàm này
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Biology Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Recognition',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
     );
   }
 }

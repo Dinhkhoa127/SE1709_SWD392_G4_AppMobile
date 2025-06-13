@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/custom_app_bar.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/login.dart';
+import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Widgets/footerpage.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -38,6 +39,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+      bottomNavigationBar: FooterPage(currentIndex: 3),
     );
   }
 }
