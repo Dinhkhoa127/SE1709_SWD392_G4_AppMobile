@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../Screens/main.dart'; // Import để dùng MainScreen
+import '../main.dart'; // Import để dùng MainScreen
 
 class FooterPage extends StatelessWidget {
   // currentIndex: tab hiện tại đang active

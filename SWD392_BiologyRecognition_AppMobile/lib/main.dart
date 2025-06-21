@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'biology_search.dart';
-import 'home.dart';
-import 'profileMenu.dart';
-import 'recognition.dart';
-import 'login.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'Screens/biology_search.dart';
+import 'Screens/home.dart';
+import 'Screens/profileMenu.dart';
+import 'Screens/recognition.dart';
+import 'Screens/login.dart';
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(MyApp());
 }
 

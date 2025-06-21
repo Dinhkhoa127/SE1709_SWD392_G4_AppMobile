@@ -21,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
             },
             child: Text('Thông tin cá nhân'),
           ),
-          ElevatedButton(onPressed: () {}, child: Text('Cài đặt')),
+          ElevatedButton(onPressed: () {}, child: Text('Lịch sử nhận diện')),
           Spacer(), // Đẩy các nút phía trên lên, nút đăng xuất xuống dưới
           Padding(
             padding: const EdgeInsets.only(bottom: 40.0),

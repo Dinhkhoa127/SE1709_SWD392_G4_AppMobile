@@ -1,59 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../services/cloudinary_service.dart';
 import 'recognitionResult.dart';
-import 'main.dart'; // Import routeObserver
 
 class RecognitionScreen extends StatefulWidget {
   @override
   _RecognitionScreenState createState() => _RecognitionScreenState();
 }
 
-class _RecognitionScreenState extends State<RecognitionScreen> with RouteAware {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
-  }
+class _RecognitionScreenState extends State<RecognitionScreen> {
+  bool _isUploading = false;
 
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPopNext() {
-    // Hàm này sẽ được gọi khi quay lại trang này
-    _pickImage();
-  }
-
-  Future<void> _pickImage() async {
+  Future<void> _pickAndUploadImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              RecognitionResultScreen(imageFile: File(pickedFile.path)),
-        ),
-      );
-    }
-  }
+      setState(() {
+        _isUploading = true;
+      });
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _pickImage());
+      // Upload lên Cloudinary
+      final url = await CloudinaryService.uploadImage(File(pickedFile.path));
+
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (url != null) {
+        // Chuyển sang màn hình kết quả và truyền link ảnh
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecognitionResultScreen(imageUrl: url),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload thất bại!')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Biology Recognition')),
-      body: Center(child: Text('Opening camera...')),
+      appBar: AppBar(title: Text('Recognition')),
+      body: Center(
+        child: _isUploading
+            ? CircularProgressIndicator()
+            : ElevatedButton(
+                onPressed: _pickAndUploadImage,
+                child: Text('Chụp & Upload ảnh'),
+              ),
+      ),
     );
   }
 }
