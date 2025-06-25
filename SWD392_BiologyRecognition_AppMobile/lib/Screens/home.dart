@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(username: 'User123', onUserIconTap: onUserIconTap),
+      appBar: CustomAppBar(username: 'Học sinh', onUserIconTap: onUserIconTap),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
