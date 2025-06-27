@@ -1,24 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Helper/UserHelper.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/custom_app_bar.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/login.dart';
+import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/userProfileDetail.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Widgets/footerpage.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/services/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  final VoidCallback? onUserIconTap;
+
+  const ProfileScreen({Key? key, this.onUserIconTap}) : super(key: key);
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String userName = 'Học sinh'; // Giá trị mặc định
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName(); // Gọi hàm lấy username khi khởi tạo
+  }
+
+  Future<void> _loadUserName() async {
+    String userHelperName = await UserHelper.getUserName();
+    setState(() {
+      userName = userHelperName; // Cập nhật state khi có username từ UserHelper
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(username: 'User123'),
+      appBar: CustomAppBar(
+        username: userName, // Sử dụng username đã lấy được
+        onUserIconTap: widget.onUserIconTap,
+      ),
       body: Column(
         children: [
           // Các nút hoặc thông tin ở phía trên
           SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LoginScreen()),
+                MaterialPageRoute(
+                  builder: (context) => UserProfileDetailScreen(),
+                ),
               );
             },
             child: Text('Thông tin cá nhân'),
@@ -38,6 +67,7 @@ class ProfileScreen extends StatelessWidget {
                     );
 
                     if (response.statusCode == 200) {
+                      await UserHelper.clearUserData(); // Xóa dữ liệu người dùng
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => LoginScreen()),

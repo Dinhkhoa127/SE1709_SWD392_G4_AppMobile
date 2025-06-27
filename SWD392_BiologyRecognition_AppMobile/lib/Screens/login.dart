@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Helper/UserHelper.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/register.dart';
 import '../main.dart'; // Import MainScreen
 import '../widgets/auth_form.dart';
@@ -44,11 +45,9 @@ class LoginScreen extends StatelessWidget {
             if (response.statusCode == 200) {
               print("Đăng nhập thành công");
               final data = jsonDecode(response.body);
-              final prefs = await SharedPreferences.getInstance();
-              // Lưu token vào SharedPreferences
-              await prefs.setString('accessToken', data['accessToken']);
-              // Lưu username vào SharedPreferences
-              await prefs.setString('userName', data['userName']);
+              await UserHelper.saveAccessToken(data['accessToken']);
+              await UserHelper.saveUserName(data['userName']);
+              await UserHelper.saveUserAccountId(data['userAccountId']);
               // Dùng pushReplacement thay vì push
               Navigator.pushReplacement(
                 context,
