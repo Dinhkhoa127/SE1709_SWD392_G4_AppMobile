@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/register.dart';
 import '../main.dart'; // Import MainScreen
 import '../widgets/auth_form.dart';
 import '../services/api_service.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatelessWidget {
   @override
@@ -42,6 +44,11 @@ class LoginScreen extends StatelessWidget {
             if (response.statusCode == 200) {
               print("Đăng nhập thành công");
               final data = jsonDecode(response.body);
+              final prefs = await SharedPreferences.getInstance();
+              // Lưu token vào SharedPreferences
+              await prefs.setString('accessToken', data['accessToken']);
+              // Lưu username vào SharedPreferences
+              await prefs.setString('userName', data['userName']);
               // Dùng pushReplacement thay vì push
               Navigator.pushReplacement(
                 context,
@@ -69,6 +76,10 @@ class LoginScreen extends StatelessWidget {
         footer: TextButton(
           onPressed: () {
             // Chuyển sang màn hình đăng ký
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RegisterScreen()),
+            );
           },
           child: Text('Chưa có tài khoản? Đăng ký'),
         ),

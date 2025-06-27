@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import '../config/api_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // GET
@@ -11,7 +12,19 @@ class ApiService {
     Map<String, String>? headers,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/$endpoint');
-    return await http.get(url, headers: headers);
+    // Lấy token nếu có
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('accessToken');
+
+    // Chỉ thêm Authorization header khi token tồn tại
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+      ...?headers,
+    };
+
+    final client = _createHttpClient();
+    return await client.get(url, headers: authHeaders);
   }
 
   // POST
@@ -29,11 +42,21 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('${ApiConfig.baseUrl}/$endpoint');
-
+      //Lay token từ SharedPreferences nếu có
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+      // Chỉ thêm Authorization header khi token tồn tại
+      final authHeaders = {
+        'Content-Type': 'application/json',
+        if (token != null)
+          'Authorization':
+              'Bearer $token', // Dòng này chỉ thêm header khi token tồn tại
+        ...?headers,
+      };
       final client = _createHttpClient();
       return await client.post(
         url,
-        headers: {'Content-Type': 'application/json', ...?headers},
+        headers: authHeaders,
         body: jsonEncode(data),
       );
     } catch (e) {
@@ -49,11 +72,19 @@ class ApiService {
     Map<String, String>? headers,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/$endpoint');
-    return await http.put(
-      url,
-      headers: {'Content-Type': 'application/json', ...?headers},
-      body: jsonEncode(data),
-    );
+    // Lấy token nếu có
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('accessToken');
+
+    // Chỉ thêm Authorization header khi token tồn tại
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+      ...?headers,
+    };
+
+    final client = _createHttpClient();
+    return await client.put(url, headers: authHeaders, body: jsonEncode(data));
   }
 
   // DELETE
@@ -62,6 +93,18 @@ class ApiService {
     Map<String, String>? headers,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/$endpoint');
-    return await http.delete(url, headers: headers);
+    // Lấy token nếu có
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('accessToken');
+
+    // Chỉ thêm Authorization header khi token tồn tại
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+      ...?headers,
+    };
+
+    final client = _createHttpClient();
+    return await client.delete(url, headers: authHeaders);
   }
 }

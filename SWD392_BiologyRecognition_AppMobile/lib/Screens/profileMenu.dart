@@ -3,6 +3,7 @@ import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/custom_
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/login.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Widgets/footerpage.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
