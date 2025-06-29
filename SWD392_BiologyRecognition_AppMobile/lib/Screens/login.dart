@@ -5,7 +5,6 @@ import '../main.dart'; // Import MainScreen
 import '../widgets/auth_form.dart';
 import '../services/api_service.dart';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatelessWidget {
   @override
