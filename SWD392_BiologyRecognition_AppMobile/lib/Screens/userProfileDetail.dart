@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/changePassword.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
-import '../Helper/UserHelper.dart';
 
 class UserProfileDetailScreen extends StatefulWidget {
   @override
@@ -18,11 +17,10 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _employeeCodeController = TextEditingController();
 
   bool _isLoading = true;
   bool _isUpdating = false;
-  int _userId = 0; // Giả sử userId là int, có thể thay đổi tùy theo API
+  int _userAccountId = 0;
 
   @override
   void initState() {
@@ -36,26 +34,19 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     _fullNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _employeeCodeController.dispose();
     super.dispose();
   }
 
-  // Lấy thông tin user profile từ API
+  // Lấy thông tin user profile từ API mới
   Future<void> _loadUserProfile() async {
     try {
       setState(() {
         _isLoading = true;
       });
 
-      // Lấy userId từ UserHelper hoặc từ tham số truyền vào
-      _userId = await UserHelper.getUserAccountId(); // Giả sử có method này
+      print('Loading current user profile...');
 
-      print('Loading user profile for ID: $_userId');
-
-      // Gọi API để lấy thông tin user
-      final response = await ApiService.getData(
-        'user-accounts/$_userId',
-      ); // Hoặc endpoint phù hợp
+      final response = await ApiService.getData('auth/current-user');
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
@@ -63,14 +54,21 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
 
-        // Điền thông tin vào các controllers
         setState(() {
+          _userAccountId = userData['userAccountId'] ?? 0;
           _userNameController.text = userData['userName'] ?? '';
           _fullNameController.text = userData['fullName'] ?? '';
           _emailController.text = userData['email'] ?? '';
           _phoneController.text = userData['phone'] ?? '';
           _isLoading = false;
         });
+
+        print('Loaded user data:');
+        print('- UserAccountId: $_userAccountId');
+        print('- Username: ${userData['userName']}');
+        print('- FullName: ${userData['fullName']}');
+        print('- Email: ${userData['email']}');
+        print('- Phone: ${userData['phone']}');
       } else {
         setState(() {
           _isLoading = false;
@@ -101,12 +99,22 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(child: CircularProgressIndicator()),
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Row(
+            children: [
+              CircularProgressIndicator(color: Color(0xFF4CAF50)),
+              SizedBox(width: 20),
+              Text('Đang cập nhật...'),
+            ],
+          ),
+        ),
       );
 
-      // Chuẩn bị data để gửi
       final updateData = {
-        'userAccountId': _userId,
+        'userAccountId': _userAccountId,
         'fullName': _fullNameController.text.trim(),
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -114,23 +122,21 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
 
       print('Updating user profile: $updateData');
 
-      // Gọi API update
       final response = await ApiService.putData(
-        'user-accounts/student/update-info',
+        'user-accounts/me/info',
         updateData,
-      ); // Hoặc endpoint phù hợp
+      );
 
-      // Ẩn loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
+      if (Navigator.canPop(context)) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
       print('Update response status: ${response.statusCode}');
       print('Update response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        // Cập nhật thành công
         _showSuccessDialog('Cập nhật thông tin thành công!');
       } else {
-        // Xử lý lỗi từ server
         try {
           final errorData = jsonDecode(response.body);
           String errorMessage = errorData['message'] ?? 'Cập nhật thất bại';
@@ -140,7 +146,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
         }
       }
     } catch (error) {
-      // Ẩn loading dialog nếu có lỗi
       if (Navigator.canPop(context)) {
         Navigator.of(context, rootNavigator: true).pop();
       }
@@ -154,7 +159,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     }
   }
 
-  // Validation cho email
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email không được để trống';
@@ -165,7 +169,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     return null;
   }
 
-  // Validation cho số điện thoại
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) {
       return 'Số điện thoại không được để trống';
@@ -176,16 +179,29 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     return null;
   }
 
-  // Hiển thị dialog lỗi
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Lỗi'),
-        content: Text(message),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: Colors.red[600]),
+            SizedBox(width: 8),
+            Text('Lỗi', style: TextStyle(color: Color(0xFF2E7D32))),
+          ],
+        ),
+        content: Text(message, style: TextStyle(color: Colors.grey[700])),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: Text('OK'),
           ),
         ],
@@ -193,19 +209,32 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // Hiển thị dialog thành công
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Thành công'),
-        content: Text(message),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Color(0xFF4CAF50)),
+            SizedBox(width: 8),
+            Text('Thành công', style: TextStyle(color: Color(0xFF2E7D32))),
+          ],
+        ),
+        content: Text(message, style: TextStyle(color: Colors.grey[700])),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              Navigator.of(context).pop(); // Quay lại trang trước
+              Navigator.of(context).pop();
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: Text('OK'),
           ),
         ],
@@ -218,163 +247,391 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Thông tin cá nhân'),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFF4CAF50),
         foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF4CAF50).withOpacity(0.1),
+              Color(0xFF66BB6A).withOpacity(0.05),
+              Colors.white,
+            ],
+            stops: [0.0, 0.3, 1.0],
+          ),
+        ),
+        child: _isLoading
+            ? Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Avatar placeholder
-                    Center(
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey[300],
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 32),
-
-                    // Tên người dùng
-                    TextFormField(
-                      controller: _userNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Tên người dùng',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.account_circle),
-                        fillColor: Colors.grey[100],
-                        filled: true,
-                      ),
-                      readOnly: true, // Có thể không cho chỉnh sửa
-                    ),
+                    CircularProgressIndicator(color: Color(0xFF4CAF50)),
                     SizedBox(height: 16),
-
-                    // Họ và tên
-                    TextFormField(
-                      controller: _fullNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Họ và tên',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
+                    Text(
+                      'Đang tải thông tin...',
+                      style: TextStyle(
+                        color: Color(0xFF2E7D32),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Họ và tên không được để trống';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-
-                    // Email
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: _validateEmail,
-                    ),
-                    SizedBox(height: 16),
-
-                    // Số điện thoại
-                    TextFormField(
-                      controller: _phoneController,
-                      decoration: InputDecoration(
-                        labelText: 'Số điện thoại',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      validator: _validatePhone,
-                    ),
-                    SizedBox(height: 16),
-
-                    // Nút thay đổi mật khẩu (navigate to separate page)
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        // Navigate to change password page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChangePasswordScreen(),
-                          ),
-                        );
-                      },
-                      icon: Icon(Icons.lock),
-                      label: Text('Đổi mật khẩu'),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    // Nút cập nhật
-                    ElevatedButton(
-                      onPressed: _isUpdating ? null : _updateUserProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _isUpdating
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text('Đang cập nhật...'),
-                              ],
-                            )
-                          : Text(
-                              'Cập nhật thông tin',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Nút hủy
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text('Hủy', style: TextStyle(fontSize: 16)),
                     ),
                   ],
                 ),
+              )
+            : SingleChildScrollView(
+                padding: EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // PROFILE HEADER CARD
+                      Container(
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 2,
+                              blurRadius: 15,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // Avatar với gradient
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFF4CAF50),
+                                    Color(0xFF66BB6A),
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0xFF4CAF50).withOpacity(0.3),
+                                    spreadRadius: 3,
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Chỉnh sửa thông tin',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2E7D32),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFF4CAF50).withOpacity(0.1),
+                                    Color(0xFF66BB6A).withOpacity(0.1),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Color(0xFF4CAF50).withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                'Cập nhật thông tin cá nhân của bạn',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF2E7D32),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // FORM FIELDS CARD
+                      Container(
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 2,
+                              blurRadius: 15,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Thông tin chi tiết',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2E7D32),
+                              ),
+                            ),
+                            SizedBox(height: 20),
+
+                            // Tên người dùng (readonly)
+                            _buildTextField(
+                              controller: _userNameController,
+                              label: 'Tên người dùng',
+                              icon: Icons.account_circle,
+                              readOnly: true,
+                              fillColor: Colors.grey[50],
+                            ),
+                            SizedBox(height: 16),
+
+                            // Họ và tên
+                            _buildTextField(
+                              controller: _fullNameController,
+                              label: 'Họ và tên',
+                              icon: Icons.person,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Họ và tên không được để trống';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: 16),
+
+                            // Email
+                            _buildTextField(
+                              controller: _emailController,
+                              label: 'Email',
+                              icon: Icons.email,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: _validateEmail,
+                            ),
+                            SizedBox(height: 16),
+
+                            // Số điện thoại
+                            _buildTextField(
+                              controller: _phoneController,
+                              label: 'Số điện thoại',
+                              icon: Icons.phone,
+                              keyboardType: TextInputType.phone,
+                              validator: _validatePhone,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // ACTIONS CARD
+                      Container(
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 2,
+                              blurRadius: 15,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tùy chọn khác',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2E7D32),
+                              ),
+                            ),
+                            SizedBox(height: 16),
+
+                            // Nút thay đổi mật khẩu
+                            _buildActionButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ChangePasswordScreen(),
+                                  ),
+                                );
+                              },
+                              icon: Icons.lock_outline,
+                              text: 'Đổi mật khẩu',
+                              isOutlined: true,
+                            ),
+                            SizedBox(height: 16),
+
+                            // Nút cập nhật
+                            _buildActionButton(
+                              onPressed: _isUpdating
+                                  ? null
+                                  : _updateUserProfile,
+                              icon: _isUpdating ? null : Icons.save,
+                              text: _isUpdating
+                                  ? 'Đang cập nhật...'
+                                  : 'Cập nhật thông tin',
+                              isLoading: _isUpdating,
+                            ),
+                            SizedBox(height: 12),
+
+                            // Nút hủy
+                            _buildActionButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: Icons.close,
+                              text: 'Hủy',
+                              isOutlined: true,
+                              color: Colors.grey[600],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 100), // Space for safe area
+                    ],
+                  ),
+                ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    bool readOnly = false,
+    Color? fillColor,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Color(0xFF2E7D32)),
+        prefixIcon: Icon(icon, color: Color(0xFF4CAF50)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Color(0xFF4CAF50).withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Color(0xFF4CAF50), width: 2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Color(0xFF4CAF50).withOpacity(0.3)),
+        ),
+        filled: true,
+        fillColor: fillColor ?? Color(0xFF4CAF50).withOpacity(0.05),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      style: TextStyle(color: Color(0xFF2E7D32)),
+      keyboardType: keyboardType,
+      validator: validator,
+      readOnly: readOnly,
+    );
+  }
+
+  Widget _buildActionButton({
+    required VoidCallback? onPressed,
+    IconData? icon,
+    required String text,
+    bool isOutlined = false,
+    bool isLoading = false,
+    Color? color,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: isOutlined
+          ? OutlinedButton.icon(
+              onPressed: onPressed,
+              icon: icon != null ? Icon(icon, size: 20) : SizedBox.shrink(),
+              label: Text(text),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: color ?? Color(0xFF4CAF50),
+                side: BorderSide(color: color ?? Color(0xFF4CAF50)),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            )
+          : ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF4CAF50),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+              ),
+              child: isLoading
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(text, style: TextStyle(fontSize: 16)),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (icon != null) ...[
+                          Icon(icon, size: 20),
+                          SizedBox(width: 8),
+                        ],
+                        Text(text, style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
             ),
     );
   }

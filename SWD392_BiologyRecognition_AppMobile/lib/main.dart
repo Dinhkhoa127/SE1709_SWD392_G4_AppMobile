@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/notification_service.dart';
 import 'Screens/biology_search.dart';
 import 'Screens/home.dart';
 import 'Screens/profileMenu.dart';
@@ -7,9 +8,16 @@ import 'Screens/recognition.dart';
 import 'Screens/login.dart';
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔧 Load environment variables TRƯỚC
   await dotenv.load(fileName: ".env");
+
+  // 🔥 Initialize Firebase + OneSignal SAU
+  await NotificationService.initialize();
+
   runApp(MyApp());
 }
 
@@ -78,7 +86,7 @@ class _MainScreenState extends State<MainScreen> {
         onBiologyResearchTap: goToBiologyResearchTab,
       ),
       BiologySearchTab(onUserIconTap: goToProfileTab),
-      RecognitionScreen(),
+      RecognitionScreen(onUserIconTap: goToProfileTab),
       ProfileScreen(),
     ];
 

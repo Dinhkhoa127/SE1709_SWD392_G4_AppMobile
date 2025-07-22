@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "458843501838",
+    "project_id": "biology-recognition",
+    "storage_bucket": "biology-recognition.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458843501838:android:1c5f0d8c4f1ecf44c9135f",
+        "android_client_info": {
+          "package_name": "com.example.se1709_swd392_biologyrecognitionsystem_appmobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458843501838-jcggf7hvgf6001g31dl9mq2hqnta3e61.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.se1709_swd392_biologyrecognitionsystem_appmobile",
+            "certificate_hash": "60b13c5e6b7ef471c85dcee5e92ec8944bc13400"
+          }
+        },
+        {
+          "client_id": "458843501838-hq2rniopc7ir4u3sa6bmk1bs9o4abktc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBNxldfDaqN8Pt7xik1ZiPPv_Hs1KzLwY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458843501838-hq2rniopc7ir4u3sa6bmk1bs9o4abktc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

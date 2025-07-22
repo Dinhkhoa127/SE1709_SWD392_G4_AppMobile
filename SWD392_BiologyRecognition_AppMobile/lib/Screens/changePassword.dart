@@ -61,7 +61,7 @@ class _ChangepasswordState extends State<ChangePasswordScreen> {
 
       //Gọi API
       final response = await ApiService.putData(
-        'user-accounts/student/update-password',
+        'user-accounts/me/password',
         changePasswordData,
       );
 

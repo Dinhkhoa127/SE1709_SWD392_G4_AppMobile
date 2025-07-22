@@ -9,23 +9,109 @@ class FooterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: Colors.white,
-      currentIndex: currentIndex,
-      onTap: (index) => _navigateToPage(context, index),
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search),
-          label: 'Biology Search',
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            spreadRadius: 0,
+            blurRadius: 15,
+            offset: Offset(0, -3),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(color: Colors.grey.withOpacity(0.2), width: 0.5),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.camera_alt),
-          label: 'Recognition',
+      ),
+      child: SafeArea(
+        child: Container(
+          height: 65, // Tăng lên 65 để đủ chỗ
+          padding: EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ), // Tăng vertical padding
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                context,
+                index: 0,
+                icon: Icons.home_rounded,
+                label: 'Home',
+                isActive: currentIndex == 0,
+              ),
+              _buildNavItem(
+                context,
+                index: 1,
+                icon: Icons.search_rounded,
+                label: 'Tra cứu',
+                isActive: currentIndex == 1,
+              ),
+              _buildNavItem(
+                context,
+                index: 2,
+                icon: Icons.camera_alt_rounded,
+                label: 'Nhận diện',
+                isActive: currentIndex == 2,
+              ),
+              _buildNavItem(
+                context,
+                index: 3,
+                icon: Icons.person_rounded,
+                label: 'Profile',
+                isActive: currentIndex == 3,
+              ),
+            ],
+          ),
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    BuildContext context, {
+    required int index,
+    required IconData icon,
+    required String label,
+    required bool isActive,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _navigateToPage(context, index),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 2,
+            vertical: 0,
+          ), // Giảm padding tối đa
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon lớn hơn, bỏ container wrapper
+              Icon(
+                icon,
+                size: 24, // Tăng từ 18 lên 24
+                color: isActive ? Color(0xFF4CAF50) : Colors.grey[600],
+              ),
+
+              SizedBox(height: 4), // Tăng spacing cho đẹp
+              // Label
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10, // Tăng từ 9 lên 10
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  color: isActive ? Color(0xFF4CAF50) : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -37,7 +123,7 @@ class FooterPage extends StatelessWidget {
     // Điều hướng về MainScreen với tab được chọn
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => MainScreen(initialIndex: index)),
-      (route) => false, // Xóa tất cả các màn hình cũ
+      (route) => false,
     );
   }
 }
