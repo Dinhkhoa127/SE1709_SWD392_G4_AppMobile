@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/Screens/main.dart';
+import 'package:se1709_swd392_biologyrecognitionsystem_appmobile/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
